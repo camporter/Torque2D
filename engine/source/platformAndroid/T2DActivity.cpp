@@ -711,7 +711,7 @@ void _AndroidGetDeviceIPAddress(char* address) {
 	 lJavaVM->DetachCurrentThread();
 
 	 char buffer[32];
-	 sprintf(buffer, "%d.%d.%d.%d", (ip & 0xFF), (ip >> 8 & 0xFF), (ip >> 16 & 0xFF), (ip >> 24 & 0xFF));
+	 dSprintf(buffer, sizeof(buffer), "%d.%d.%d.%d", (ip & 0xFF), (ip >> 8 & 0xFF), (ip >> 16 & 0xFF), (ip >> 24 & 0xFF));
 	 strcpy(address, buffer);
 
 }
@@ -2584,8 +2584,8 @@ void adprintf(const char* fmt,...) {
 	char s[4096];
 	time_t now;
 
-	va_start(argptr,fmt);
-	cnt = vsprintf(s,fmt,argptr);
+	va_start(argptr, fmt);
+	cnt = dVsprintf(s, sizeof(s), fmt, argptr);
 	va_end(argptr);
 
 	time(&now);

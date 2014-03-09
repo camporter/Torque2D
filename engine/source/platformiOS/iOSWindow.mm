@@ -31,6 +31,7 @@
 #include "console/console.h"
 #include "platformiOS/iOSEvents.h"
 #include "platform/threads/thread.h"
+#include "string/stringTable.h"
 
 #include "platformiOS/iOSWindow.h"
 #import <OpenGLES/EAGLDrawable.h>
@@ -424,6 +425,16 @@ bool setScreenOrientation(bool portrait, bool upsidedown)
     }
 
     return success;
+}
+
+StringTableEntry Platform::createUUID( void )
+{
+    CFUUIDRef ref = CFUUIDCreate(nil);
+    NSString* uuid = (__bridge_transfer NSString *)CFUUIDCreateString(nil,ref);
+    CFRelease(ref);
+
+    StringTableEntry uuidString = StringTable->insert([uuid UTF8String]);
+    return uuidString;
 }
 
 ConsoleFunction(setScreenOrientation, bool, 3, 3, "Sets the orientation of the screen ( portrait/landscape, upside down or right-side up )\n"

@@ -31,6 +31,7 @@
 #include "console/console.h"
 #include "platformAndroid/AndroidEvents.h"
 #include "platform/threads/thread.h"
+#include "string/stringTable.h"
 
 #include "platformAndroid/AndroidWindow.h"
 
@@ -204,6 +205,12 @@ void Platform::initWindow(const Point2I &initialSize, const char *name)
     //NOTE:	This should probably be set by the user to be the color closest to Default.png in order to minimize any popping effect... $pref:: anyone? Are $pref::s even valid at this point in the Init process?
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
+}
+
+StringTableEntry Platform::createUUID( void )
+{
+    Con::errorf("createUUID not supported on Android!");
+    return StringTable->EmptyString;
 }
 
 //--------------------------------------

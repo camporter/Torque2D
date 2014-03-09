@@ -1150,38 +1150,38 @@ bool dPathCopy(const char *fromName, const char *toName, bool nooverwrite)
  
 StringTableEntry Platform::getExecutableName()
 {
-    static StringTableEntry cwd = NULL;
+   static StringTableEntry cwd = NULL;
 
-    if (!cwd)
-    {
-        cwd = StringTable->insert(x86UNIXState->getExeName());
-    }
-    return cwd;
+   if (!cwd)
+   {
+      cwd = StringTable->insert(x86UNIXState->getExeName());
+   }
+   return cwd;
 
 }
 
 //-----------------------------------------------------------------------------
 void Platform::restartInstance()
 {
-        // execl() leaves open file descriptors open, that's the main reason it's not
-        // used here. We want to start fresh.
+   // execl() leaves open file descriptors open, that's the main reason it's not
+   // used here. We want to start fresh.
 
-        if (Game->isRunning() )
-        {
-                Con::errorf("The game is still running, we cant relaunch now!");
-                return;
-        }
+   if (Game->isRunning() )
+   {
+      Con::errorf("The game is still running, we cant relaunch now!");
+      return;
+   }
 
-        char cmd[MaxPath];
-        sprintf(cmd, "\"%s &\"", x86UNIXState->getExePathName());
-        Con::printf("---- %s -----",cmd);
-        if(!system(cmd))
-        {
-                Con::errorf("Cannot fork new instance.");
-                return;
-        }
+   char cmd[MaxPath];
+   dSprintf(cmd, sizeof(cmd), "\"%s &\"", x86UNIXState->getExePathName());
+   Con::printf("---- %s -----", cmd);
+   if (!system(cmd))
+   {
+      Con::errorf("Cannot fork new instance.");
+      return;
+   }
 
-        exit(0);
+   exit(0);
 }
 
 //-----------------------------------------------------------------------------

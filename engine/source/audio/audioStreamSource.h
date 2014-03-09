@@ -75,10 +75,6 @@ class AudioStreamSource
         bool					bFinishedPlaying;
         bool					bIsValid;
 
-#ifdef TORQUE_OS_LINUX
-                void checkPosition();
-#endif
-
     protected:
         const char* mFilename;
 };

@@ -51,8 +51,8 @@
 #include "platform/platformCPU.h"
 #endif
 
-#ifndef _PLATFORM_STRING_H_
-#include "platform/platformString.h"
+#ifndef _STRING_FUNCTIONS_H_
+#include "string/stringFunctions.h"
 #endif
 
 #ifndef _PLATFORM_NETWORK_H_

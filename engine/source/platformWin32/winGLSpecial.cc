@@ -119,7 +119,7 @@ static const char * PrimToString( GLenum mode )
    else if ( mode == GL_LINE_LOOP )
       strcpy( prim, "GL_LINE_LOOP" );
    else
-      sprintf( prim, "0x%x", mode );
+      dSprintf(prim, sizeof(prim), "0x%x", mode);
 
    return prim;
 }
@@ -155,7 +155,7 @@ static const char * CapToString( GLenum cap )
    case GL_TEXTURE_GEN_T:
       return "GL_TEXTURE_GEN_T";
    default:
-      sprintf( buffer, "0x%x", cap );
+      dSprintf(buffer, sizeof(buffer), "0x%x", cap);
    }
 
    return buffer;
@@ -303,47 +303,47 @@ static void APIENTRY logglBitmap(GLsizei width, GLsizei height, GLfloat xorig, G
    dllglBitmap( width, height, xorig, yorig, xmove, ymove, bitmap );
 }
 
-static void BlendToName( char *n, GLenum f )
+static void BlendToName( char *n, dsize_t size, GLenum f )
 {
    switch ( f )
    {
    case GL_ONE:
-      strcpy( n, "GL_ONE" );
+      dStrncpy(n, "GL_ONE", size);
       break;
    case GL_ZERO:
-      strcpy( n, "GL_ZERO" );
+      dStrncpy(n, "GL_ZERO", size);
       break;
    case GL_SRC_ALPHA:
-      strcpy( n, "GL_SRC_ALPHA" );
+      dStrncpy(n, "GL_SRC_ALPHA", size);
       break;
    case GL_ONE_MINUS_SRC_ALPHA:
-      strcpy( n, "GL_ONE_MINUS_SRC_ALPHA" );
+      dStrncpy(n, "GL_ONE_MINUS_SRC_ALPHA", size);
       break;
    case GL_SRC_COLOR:
-      strcpy( n, "GL_SRC_COLOR" );
+      dStrncpy(n, "GL_SRC_COLOR", size);
       break;
    case GL_ONE_MINUS_SRC_COLOR:
-      strcpy( n, "GL_ONE_MINUS_SRC_COLOR" );
+      dStrncpy(n, "GL_ONE_MINUS_SRC_COLOR", size);
       break;
    case GL_DST_COLOR:
-      strcpy( n, "GL_DST_COLOR" );
+      dStrncpy(n, "GL_DST_COLOR", size);
       break;
    case GL_ONE_MINUS_DST_COLOR:
-      strcpy( n, "GL_ONE_MINUS_DST_COLOR" );
+      dStrncpy(n, "GL_ONE_MINUS_DST_COLOR", size);
       break;
    case GL_DST_ALPHA:
-      strcpy( n, "GL_DST_ALPHA" );
+      dStrncpy(n, "GL_DST_ALPHA", size);
       break;
    default:
-      sprintf( n, "0x%x", f );
+      dSprintf(n, size, "0x%x", f);
    }
 }
 static void APIENTRY logglBlendFunc(GLenum sfactor, GLenum dfactor)
 {
    char sf[128], df[128];
 
-   BlendToName( sf, sfactor );
-   BlendToName( df, dfactor );
+   BlendToName( sf, sizeof(sf), sfactor );
+   BlendToName( df, sizeof(df), dfactor );
 
    fprintf( winState.log_fp, "glBlendFunc( %s, %s )\n", sf, df );
    fflush(winState.log_fp);

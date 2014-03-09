@@ -37,6 +37,7 @@
 #include "platformX86UNIX/platformGL.h"
 #include "platformX86UNIX/x86UNIXOGLVideo.h"
 #include "platformX86UNIX/x86UNIXState.h"
+#include "string/stringTable.h"
 
 #ifndef DEDICATED
 #include "platformX86UNIX/x86UNIXMessageBox.h"
@@ -816,6 +817,12 @@ bool Platform::openWebBrowser( const char* webAddress )
 void Platform::setMouseLock(bool locked)
 {
   // Not implemented
+}
+
+StringTableEntry Platform::createUUID(void)
+{
+   Con::errorf("createUUID not supported on Linux!");
+   return StringTable->EmptyString;
 }
 
 //-------------------------------------------------------------------------------

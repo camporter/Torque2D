@@ -296,7 +296,6 @@ SOURCES := ../../source/2d/assets/AnimationAsset.cc \
 	../../source/platform/platformFont.cc \
 	../../source/platform/platformMemory.cc \
 	../../source/platform/platformNetwork_ScriptBinding.cc \
-	../../source/platform/platformString.cc \
 	../../source/platform/platformVideo.cc \
 	../../source/platform/platformNetAsync.unix.cc \
 	../../source/platform/menus/popupMenu.cc \
@@ -321,7 +320,6 @@ SOURCES := ../../source/2d/assets/AnimationAsset.cc \
 	../../source/platformX86UNIX/x86UNIXOpenAL.cc \
 	../../source/platformX86UNIX/x86UNIXProcessControl.cc \
 	../../source/platformX86UNIX/x86UNIXSemaphore.cc \
-	../../source/platformX86UNIX/x86UNIXStrings.cc \
 	../../source/platformX86UNIX/x86UNIXThread.cc \
 	../../source/platformX86UNIX/x86UNIXTime.cc \
 	../../source/platformX86UNIX/x86UNIXUtils.cc \
@@ -365,6 +363,7 @@ SOURCES := ../../source/2d/assets/AnimationAsset.cc \
 	../../source/spine/SlotData.c \
 	../../source/string/findMatch.cc \
 	../../source/string/stringBuffer.cc \
+	../../source/string/stringFunctions.cpp \
 	../../source/string/stringStack.cc \
 	../../source/string/stringTable.cc \
 	../../source/string/stringUnit.cpp \

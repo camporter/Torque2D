@@ -42,41 +42,49 @@
 XftFont *loadFont(const char *name, S32 size, Display *display)
 {
   XftFont *fontInfo = NULL;
-  char* fontname = const_cast<char*>(name);
-  if (dStrlen(fontname)==0)
-    fontname = "arial";
-  else if (stristr(const_cast<char*>(name), "arial") != NULL)
-    fontname = "arial";
-  else if (stristr(const_cast<char*>(name), "lucida console") != NULL)
-    fontname = "lucida console";
+  char fontname[1024];
+  dStrncpy(fontname, name, sizeof(fontname));
 
-  char* weight = "medium";
-  char* slant = "roman"; // no slant
+  if (dStrlen(fontname) == 0 || dStristr(name, "arial") != NULL)
+  {
+    dStrncpy(fontname, "arial", sizeof(fontname));
+  }
+  else if (dStristr(name, "lucida console") != NULL)
+  {
+    dStrncpy(fontname, "lucida console", sizeof(fontname));
+  }
 
-  if (stristr(const_cast<char*>(name), "bold") != NULL)
-    weight = "bold";
-  if (stristr(const_cast<char*>(name), "italic") != NULL)
-    slant = "italic";
+  char weight[32];
+  char slant[32];
+
+  dStrncpy(weight, "medium", sizeof(weight));
+  dStrncpy(slant, "roman", sizeof(slant)); // no slant
+
+  if (dStristr(name, "bold") != NULL)
+    dStrncpy(weight, "bold", sizeof(weight));
+  if (dStristr(name, "italic") != NULL)
+    dStrncpy(slant, "italic", sizeof(slant));
 
   int mSize = size - 2 - (int)((float)size * 0.1);
   char xfontName[512];
   // We specify a lower DPI to get 'correct' looking fonts, if we go with the
   // native DPI the fonts are to big and don't fit the widgets.
-  dSprintf(xfontName, 512, "%s-%d:%s:slant=%s:dpi=76", fontname, mSize, weight, slant);
+  dSprintf(xfontName, sizeof(xfontName), "%s-%d:%s:slant=%s:dpi=76", fontname, mSize, weight, slant);
 
   // Lets see if Xft can get a font for us.
   char xftname[1024];
   fontInfo = XftFontOpenName(display, DefaultScreen(display), xfontName);
-  // Cant find a suitabke font, default to a known font (6x10)
+  // Cant find a suitable font, default to a known font (6x10)
   if ( !fontInfo )
-    {
-  	dSprintf(xfontName, 512, "6x10-%d:%s:slant=%s:dpi=76", mSize, weight, slant);
-      fontInfo = XftFontOpenName(display, DefaultScreen(display), xfontName);
-    }
-      XftNameUnparse(fontInfo->pattern, xftname, 1024);
+  {
+     dSprintf(xfontName, sizeof(xfontName), "6x10-%d:%s:slant=%s:dpi=76", mSize, weight, slant);
+     fontInfo = XftFontOpenName(display, DefaultScreen(display), xfontName);
+  }
+
+  XftNameUnparse(fontInfo->pattern, xftname, sizeof(xftname));
 
 #ifdef DEBUG
-      Con::printf("Font '%s %d' mapped to '%s'\n", name, size, xftname);
+  Con::printf("Font '%s %d' mapped to '%s'\n", name, size, xftname);
 #endif
 
   return fontInfo;

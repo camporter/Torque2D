@@ -1780,6 +1780,56 @@ bool Platform::openWebBrowser( const char* webAddress )
    return( true );
 }
 
+StringTableEntry Platform::createUUID( void )
+{
+    // Create UUID.
+    UUID id; 
+    UuidCreate( &id );
+
+    // Format UUID.
+    char uuidBuffer[128];
+    dSprintf( uuidBuffer, sizeof(uuidBuffer),
+        "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+        id.Data1,
+        id.Data2,
+        id.Data3,
+        id.Data4[0],
+        id.Data4[1],
+        id.Data4[2],
+        id.Data4[3],
+        id.Data4[4],
+        id.Data4[5],
+        id.Data4[6],
+        id.Data4[7]);
+
+    return StringTable->insert(uuidBuffer);
+}
+
+// TODO Move these somewhere more sensible with better names?
+UTF8 * convertUTF16toUTF8(const UTF16 *string, UTF8 *buffer, U32 bufsize)
+{
+    int nRet;
+    if((nRet = WideCharToMultiByte(CP_UTF8, 0, string, dStrlen(string), (LPSTR)buffer, bufsize, NULL, NULL)) != 0)
+    {
+        buffer[nRet] = 0;
+        return buffer;
+    }
+    else
+        return NULL;
+}
+
+UTF16 * convertUTF8toUTF16(const UTF8 *string, UTF16 *buffer, U32 bufsize)
+{
+    int nRet;
+    if((nRet = MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)string, dStrlen((const char *)string), buffer, bufsize)) != 0)
+    {
+        buffer[nRet] = 0;
+        return buffer;
+    }
+    else
+        return NULL;
+}
+
 //--------------------------------------
 // Platform functions for window menu
 //--------------------------------------

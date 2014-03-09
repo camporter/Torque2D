@@ -23,6 +23,7 @@
 #import "platformOSX/platformOSX.h"
 #include "platform/platformVideo.h"
 #include "game/gameInterface.h"
+#include "string/stringTable.h"
 
 #pragma mark ---- OSXPlatState Implementation ----
 
@@ -418,4 +419,15 @@ void Platform::outputDebugString(const char *string)
     fprintf(stderr, string, NULL );
     fprintf(stderr, "\n" );
     fflush(stderr);
+}
+
+StringTableEntry Platform::createUUID( void )
+{
+    CFUUIDRef ref = CFUUIDCreate(nil);
+    NSString* uuid = (NSString *)CFUUIDCreateString(nil,ref);
+    CFRelease(ref);
+    
+    StringTableEntry uuidString = StringTable->insert([uuid UTF8String]);
+    [uuid release];
+    return uuidString;
 }

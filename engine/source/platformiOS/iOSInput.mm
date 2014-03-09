@@ -1087,16 +1087,16 @@ int processMultipleTouches()
     while( TouchTapEvents.size() > 0 ) 
     {
 		currentEvent = &TouchTapEvents.last();
-		sprintf( temp, "%d ", currentEvent->x );
+      dSprintf(temp, sizeof(temp), "%d ", currentEvent->x);
 		dStrcat( posX, temp );
 		
-		sprintf( temp, "%d ", currentEvent->y );
+      dSprintf(temp, sizeof(temp), "%d ", currentEvent->y);
 		dStrcat( posY, temp );
 		
 		TouchTapEvents.pop_back();
 	}
     
-	sprintf( temp, "%d", numTapEvents );
+   dSprintf(temp, sizeof(temp), "%d", numTapEvents);
     
 	//if( numTapEvents > 0 )
     //    Con::executef( 4, "oniOSTouchTap", temp , posX, posY );

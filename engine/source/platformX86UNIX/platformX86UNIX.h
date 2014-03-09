@@ -32,9 +32,6 @@
 #include "platform/event.h"
 #endif
 
-#include <stdio.h>
-#include <string.h>
-
 // these will be used to construct the user preference directory where
 // created files will be stored (~/PREF_DIR_ROOT/PREF_DIR_GAME_NAME)
 #define PREF_DIR_ROOT ".garagegames"
@@ -54,14 +51,7 @@ void ProcessControlInit();
 bool AcquireProcessMutex(const char *mutexName);
 
 // Utility functions
-// Convert a string to lowercase in place
-char *strtolwr(char* str);
-
 void DisplayErrorAlert(const char* errMsg, bool showSDLError = true);
-
-// Just like strstr, except case insensitive
-// (Found this function at http://www.codeguru.com/string/stristr.html)
-extern char *stristr(char *szStringToBeSearched, const char *szSubstringToSearchFor);
 
 #endif
 

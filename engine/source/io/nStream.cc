@@ -77,10 +77,10 @@ bool Stream::writeFormattedBuffer(const char *format, ...)
    char buffer[4096];
    va_list args;
    va_start(args, format);
-   const S32 length = vsprintf(buffer, format, args);
 
-   // Sanity!
-   AssertFatal(length <= sizeof(buffer), "writeFormattedBuffer - String format exceeded buffer size.  This will cause corruption.");
+   const S32 length = dVsprintf(buffer, sizeof(buffer), format, args);
+
+   va_end(args);
 
    return write( length, buffer );
 }

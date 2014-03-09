@@ -933,7 +933,7 @@ bool Platform::hasSubDirectory(const char *path)
 	android_GetNextDir(path, dir);
 	while(strcmp(dir,"") != 0)
 	{
-		sprintf(pdir, "%s/%s", path, dir);
+		dSprintf(pdir, sizeof(pdir), "%s/%s", path, dir);
 		if (isGoodDirectory(pdir))
 			return true;
 		android_GetNextDir(path, dir);
@@ -974,7 +974,7 @@ bool Platform::hasSubDirectory(const char *path)
    android_GetNextDir(pathbuf, dir);
    while(strcmp(dir,"") != 0)
    {
-		sprintf(pdir, "%s/%s", pathbuf, dir);
+		dSprintf(pdir, sizeof(pdir), "%s/%s", pathbuf, dir);
 		if (!isGoodDirectory(pdir))
 			return false;
       
@@ -1209,7 +1209,7 @@ static bool recurseDumpPathCache(const char* curPath, Vector<Platform::FileInfo>
       // construct the full file path. we need this to get the file size and to recurse
       const U32 len = dStrlen(curPath) + entry->d_reclen + 2;
       char pathbuf[255];
-      sprintf( pathbuf, "%s/%s", curPath, entry->d_name);
+      dSprintf(pathbuf, sizeof(pathbuf), "%s/%s", curPath, entry->d_name);
 
       // ok, deal with directories and files seperately.
       if( entry->d_type == DT_DIR )
