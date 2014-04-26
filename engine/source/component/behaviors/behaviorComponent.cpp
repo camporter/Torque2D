@@ -1390,9 +1390,12 @@ void BehaviorComponent::onTamlCustomRead( const TamlCustomNodes& customNodes )
                 // Add behavior.
                 addBehavior( pBehaviorInstance );
 
-                // Override the automatically allocated behavior Id when adding the behavior.
-                // NOTE: This must be done after adding the behavior.
-                pBehaviorInstance->setBehaviorId( behaviorId );
+                // Override the automatically allocated behavior Id when adding the behavior,
+                // but only if defined by the Id field in taml.
+                // NOTE: This must be done after addBehavior.
+                if (behaviorId != 0) {
+                    pBehaviorInstance->setBehaviorId( behaviorId );
+                }
             }
         }
 
