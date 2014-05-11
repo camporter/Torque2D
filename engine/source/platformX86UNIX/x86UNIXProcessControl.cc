@@ -37,12 +37,12 @@
 #include <signal.h>
 
 #ifndef DEDICATED
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #endif
 
 extern void SendQuitEvent();
 
-ProcessMutex pMutex;
+extern x86UNIXPlatformState *x86UNIXState;
 
 //-----------------------------------------------------------------------------
 // This is a mainly a debugging function for intercepting a nonzero exit code
@@ -97,10 +97,6 @@ void Cleanup(bool minimal)
    GLLoader::OpenGLShutdown();
    SDL_Quit();
 #endif
-//    Display* display = x86UNIXState->GetDisplayPointer();
-//    if (display != NULL)
-//       XCloseDisplay(display);
-   pMutex.release();
 }
 
 //-----------------------------------------------------------------------------
@@ -158,10 +154,11 @@ void ProcessControlInit()
 }
 
 //-----------------------------------------------------------------------------
-bool AcquireProcessMutex(const char *mutexName)
-{
-   return pMutex.acquire(mutexName);
-}
+// TODO: Figure out what to do with this.
+// bool AcquireProcessMutex(const char *mutexName)
+// {
+//    return pMutex.acquire(mutexName);
+// }
 
 //-----------------------------------------------------------------------------
 void Platform::postQuitMessage(const U32 in_quitVal)

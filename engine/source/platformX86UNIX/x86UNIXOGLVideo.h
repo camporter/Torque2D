@@ -29,6 +29,8 @@
 #include "platform/platformVideo.h"
 #endif
 
+#include <SDL2/SDL.h>
+
 class OpenGLDevice : public DisplayDevice
 {
       static bool smCanSwitchBitDepth;
@@ -36,7 +38,9 @@ class OpenGLDevice : public DisplayDevice
       bool mRestoreGamma;
       U16  mOriginalRamp[256*3];
 
-      void addResolution(S32 width, S32 height, bool check=true);
+      void addResolution(S32 width, S32 height);
+   protected:
+      SDL_Window* mWindow;
 
    public:
       OpenGLDevice();

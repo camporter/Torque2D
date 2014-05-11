@@ -29,7 +29,7 @@
 #include "math/mPoint.h"
 
 #include <dlfcn.h>
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 
 // declare stub functions
 #define GL_FUNCTION(fn_return, fn_name, fn_args, fn_value) fn_return stub_##fn_name fn_args{ fn_value }

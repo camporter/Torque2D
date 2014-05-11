@@ -24,12 +24,16 @@
 
 #include "platformX86UNIX/platformX86UNIX.h"
 #include "platformX86UNIX/x86UNIXState.h"
-#include "time.h"
+#include "platform/event.h"
+#include "game/gameInterface.h"
+
 #include <errno.h>
 #include <time.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
+
+extern x86UNIXPlatformState *x86UNIXState;
 
 U32 x86UNIXGetTickCount();
 //--------------------------------------
@@ -75,9 +79,45 @@ U32 Platform::getVirtualMilliseconds()
 void Platform::advanceTime(U32 delta)
 {
    x86UNIXState->currentTime += delta;
-}   
+}
 
+//-------------------------------------------------------------------------------
+void TimeManager::process()
+{
+   U32 curTime = Platform::getRealMilliseconds();
+   TimeEvent event;
+   event.elapsedTime = curTime - x86UNIXState->lastTimeTick;
 
+// TODO: Fix background sleeping stuff
+   // if we're not the foreground window, sleep for 1 ms
+   // if (!x86UNIXState->windowActive())
+      // Sleep(0, getBackgroundSleepTime() * 1000000);
+
+   if(event.elapsedTime > sgTimeManagerProcessInterval)
+   {
+      x86UNIXState->lastTimeTick = curTime;
+      Game->postEvent(event);
+   }
+}
+
+// Move this into the time manager stuff
+// else
+// {
+//    // if we're not in journal mode, sleep for 1 ms
+//    // JMQ: since linux's minimum sleep latency seems to be 20ms, this can
+//    // increase player pings by 10-20ms in the dedicated server. the server sleeps anyway when
+//    // there are no players connected.
+//    // JMQ: recent kernels (such as RH 8.0 2.4.18) reduce the latency
+//    // to 2-4 ms on average.
+//    if (!Game->isJournalReading() && (x86UNIXState->getDSleep() || 
+//           Con::getIntVariable("Server::PlayerCount") - 
+//           Con::getIntVariable("Server::BotCount") <= 0))
+//    {
+//       PROFILE_START(XUX_Sleep);
+//       Sleep(0, getBackgroundSleepTime() * 100000);
+//       PROFILE_END();
+//    }
+// }
 
 //------------------------------------------------------------------------------
 //-------------------------------------- x86UNIX Implementation

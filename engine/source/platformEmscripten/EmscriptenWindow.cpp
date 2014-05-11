@@ -448,26 +448,6 @@ bool Platform::openWebBrowser( const char* webAddress )
 }
 
 //------------------------------------------------------------------------------
-ConsoleFunction( getDesktopResolution, const char*, 1, 1, 
-   "getDesktopResolution()" )
-{
-   if (!gPlatState.windowCreated)
-      return "0 0 0";
-
-   char buffer[256];
-   char* returnString = Con::getReturnBuffer( dStrlen( buffer ) + 1 );
-
-   Resolution res = Video::getDesktopResolution();
-
-   dSprintf( buffer, sizeof( buffer ), "%d %d %d", 
-      res.w,
-      res.h, 
-      res.bpp );
-   dStrcpy( returnString, buffer );
-   return( returnString );
-}
-
-//------------------------------------------------------------------------------
 // Silly Korean registry key checker:
 //------------------------------------------------------------------------------
 ConsoleFunction( isKoreanBuild, bool, 1, 1, "isKoreanBuild()" )

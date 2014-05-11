@@ -44,11 +44,6 @@
  */
  
  #include "platformX86UNIX/x86UNIXState.h"
- // evil hack to get around insane X windows #define-happy header files
- #ifdef Status
- #undef Status
- #endif
- 
  #include "platformX86UNIX/platformX86UNIX.h"
  #include "platform/platformFileIO.h"
  #include "collection/vector.h"
@@ -81,6 +76,8 @@
  extern int x86UNIXClose(int fd);
  extern ssize_t x86UNIXRead(int fd, void *buf, size_t nbytes);
  extern ssize_t x86UNIXWrite(int fd, const void *buf, size_t nbytes);
+
+ extern x86UNIXPlatformState *x86UNIXState;
  
  const int MaxPath = 2048;
  

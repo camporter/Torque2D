@@ -27,7 +27,7 @@
 #include "platform/platformInput.h"
 #include "platformX86UNIX/platformX86UNIX.h"
 
-#include <SDL/SDL_events.h>
+#include <SDL2/SDL_events.h>
 
 #define NUM_KEYS ( KEY_OEM_102 + 1 )
 #define KEY_FIRST KEY_ESCAPE
@@ -77,7 +77,7 @@ class JoystickInputDevice : public InputDevice
     
   private:
     bool mActive;
-    U8 mDeviceID;
+    SDL_JoystickID mDeviceID;
     SDL_Joystick* mStick;
     Vector<JoystickAxisInfo> mAxisList;
     Vector<bool> mButtonState;
@@ -181,6 +181,7 @@ class UInputManager : public InputManager
       void joyAxisEvent(U8 deviceID, U8 axisNum, S16 axisValue);
       void mouseButtonEvent(const SDL_Event& event);
       void mouseMotionEvent(const SDL_Event& event);
+      void mouseWheelEvent(const SDL_Event& event);
       void keyEvent(const SDL_Event& event);
       bool processKeyEvent(InputEvent &event);
 };

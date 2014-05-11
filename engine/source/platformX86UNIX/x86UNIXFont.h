@@ -20,42 +20,45 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifndef _PLATFORMFONT_H_
 #include "platform/platformFont.h"
 #include "platform/platform.h"
-#endif
+#include <ft2build.h>
+#include <fontconfig/fontconfig.h>
+#include FT_FREETYPE_H
 
 #ifndef _X86UNIXFONT_H_
 #define _X86UNIXFONT_H_
 
+
 class x86UNIXFont : public PlatformFont
 {
-	private:
-		int baseline;
-		int height;
-		StringTableEntry  mFontName;
-	public:
-		x86UNIXFont();
-		virtual ~x86UNIXFont();
-    
-    	// PlatformFont virtual methods
-		virtual bool isValidChar(const UTF16 ch) const;
-		virtual bool isValidChar(const UTF8 *str) const;
+private:
+	U32 mBaseline;
+	U32 mHeight;
 
-		inline U32 getFontHeight() const
-		{
-			return height;
-		}
-		
-		inline U32 getFontBaseLine() const
-		{
-			return baseline;
-		}
+    //freetype2 lib
+    FT_Library library;
+    FT_Face face;
+    unsigned char* fontFileBuffer;
+    unsigned int fontFileBufferSize;
+    bool fontFaceCreated;
 
-		virtual PlatformFont::CharInfo &getCharInfo(const UTF16 ch) const;
-		virtual PlatformFont::CharInfo &getCharInfo(const UTF8 *str) const;
+public:
+	x86UNIXFont();
+	virtual ~x86UNIXFont();
 
-		virtual bool create(const char *name, dsize_t size, U32 charset = TGE_ANSI_CHARSET);
+	virtual bool create(const char *name, dsize_t size, U32 charset = TGE_ANSI_CHARSET);
+
+	// PlatformFont virtual methods
+	virtual bool isValidChar(const UTF16 character) const;
+	virtual bool isValidChar(const UTF8 *str) const;
+
+	virtual U32 getFontHeight() const { return mHeight; }
+	virtual U32 getFontBaseLine() const { return mBaseline; }
+
+	virtual PlatformFont::CharInfo &getCharInfo(const UTF16 character) const;
+	virtual PlatformFont::CharInfo &getCharInfo(const UTF8 *str) const;
+
 };
 
 #endif

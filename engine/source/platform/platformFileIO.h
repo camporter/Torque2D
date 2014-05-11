@@ -26,11 +26,6 @@
 #include "platform/platform.h"
 #endif
 
-#ifdef TORQUE_OS_LINUX
-// Need to remove this once Xlib stops leaking
-#undef Status
-#endif
-
 class File
 {
 public:

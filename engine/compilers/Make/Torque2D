@@ -314,7 +314,6 @@ SOURCES := ../../source/2d/assets/AnimationAsset.cc \
 	../../source/platformX86UNIX/x86UNIXMath.cc \
 	../../source/platformX86UNIX/x86UNIXMath_ASM.cc \
 	../../source/platformX86UNIX/x86UNIXMemory.cc \
-	../../source/platformX86UNIX/x86UNIXMessageBox.cc \
 	../../source/platformX86UNIX/x86UNIXMutex.cc \
 	../../source/platformX86UNIX/x86UNIXNet.cc \
 	../../source/platformX86UNIX/x86UNIXOGLVideo.cc \
@@ -401,7 +400,7 @@ SOURCES := ../../source/2d/assets/AnimationAsset.cc \
 	../../source/gui/editor/guiSeparatorCtrl.cc 
 
 LDFLAGS := -g -m32
-LDLIBS := -lstdc++ -lm -ldl -lpthread -lrt -lX11 -lXft -lSDL -lopenal
+LDLIBS := -lstdc++ -lm -ldl -lpthread -lrt -lSDL2 -lopenal -lfontconfig -lfreetype
 
 CFLAGS := -MMD -I. -Wfatal-errors -Wunused -m32 -msse -march=i686 -pipe
 

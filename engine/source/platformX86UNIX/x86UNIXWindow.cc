@@ -20,6 +20,12 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+#include <errno.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <unistd.h> // fork, execvp, chdir
+#include <time.h> // nanosleep
+
 #include "console/console.h"
 #include "io/fileStream.h"
 #include "game/resource.h"
@@ -39,37 +45,16 @@
 #include "platformX86UNIX/x86UNIXState.h"
 
 #ifndef DEDICATED
-#include "platformX86UNIX/x86UNIXMessageBox.h"
 #include "platformX86UNIX/x86UNIXInputManager.h"
-#endif
 
-#include <errno.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <unistd.h> // fork, execvp, chdir
-#include <time.h> // nanosleep
-
-#ifndef DEDICATED
-#include <SDL/SDL.h>
-#include <SDL/SDL_syswm.h>
-#include <SDL/SDL_version.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_syswm.h>
+#include <SDL2/SDL_version.h>
 #endif
 
 x86UNIXPlatformState *x86UNIXState;
 
-bool DisplayPtrManager::sgDisplayLocked = false;
-LockFunc_t DisplayPtrManager::sgLockFunc = NULL;
-LockFunc_t DisplayPtrManager::sgUnlockFunc = NULL;
-
-static U32 lastTimeTick;
-
-#ifndef DEDICATED
 extern bool InitOpenGL();
-// This is called when some X client sends 
-// a selection event (e.g. SelectionRequest)
-// to the window
-extern void NotifySelectionEvent(XEvent& event);
-#endif
 
 //------------------------------------------------------------------------------
 static S32 ParseCommandLine(S32 argc, const char **argv, 
@@ -91,11 +76,6 @@ static S32 ParseCommandLine(S32 argc, const char **argv,
       {
          foundDedicated = true;
          // no continue because dedicated is also handled by script
-      }
-      if (dStrcmp(argv[i], "-dsleep") == 0)
-      {
-         x86UNIXState->setDSleep(true);
-         continue;
       }
       if (dStrcmp(argv[i], "-nohomedir") == 0)
       {
@@ -134,18 +114,6 @@ static S32 ParseCommandLine(S32 argc, const char **argv,
    return 0;
 }
 
-static void DetectWindowingSystem()
-{
-#ifndef DEDICATED
-   Display* dpy = XOpenDisplay(NULL);
-   if (dpy != NULL)
-   {
-      x86UNIXState->setXWindowsRunning(true);
-      XCloseDisplay(dpy);
-   }
-#endif
-}
-
 //------------------------------------------------------------------------------
 static void InitWindow(const Point2I &initialSize, const char *name)
 {
@@ -162,35 +130,25 @@ static bool InitSDL()
 
    atexit(SDL_Quit);
 
-   SDL_SysWMinfo sysinfo;
-   SDL_VERSION(&sysinfo.version);
-   if (SDL_GetWMInfo(&sysinfo) == 0)
-      return false;
 
-   x86UNIXState->setDisplayPointer(sysinfo.info.x11.display);
-   DisplayPtrManager::setDisplayLockFunction(sysinfo.info.x11.lock_func);
-   DisplayPtrManager::setDisplayUnlockFunction(sysinfo.info.x11.unlock_func);
+   // SDL_SysWMinfo sysinfo;
+   // SDL_VERSION(&sysinfo.version);
+   // if (SDL_GetWMInfo(&sysinfo) == 0)
+   //    return false;
 
-   DisplayPtrManager xdisplay;
-   Display* display = xdisplay.getDisplayPointer();
-
-   x86UNIXState->setScreenNumber( 
-      DefaultScreen( display ) );
-   x86UNIXState->setScreenPointer( 
-      DefaultScreenOfDisplay( display ) );
-
-   x86UNIXState->setDesktopSize( 
-      (S32) DisplayWidth( 
-         display,
-         x86UNIXState->getScreenNumber()),
-      (S32) DisplayHeight( 
-         display,
-         x86UNIXState->getScreenNumber())
-      );
-   x86UNIXState->setDesktopBpp( 
-      (S32) DefaultDepth( 
-         display,
-         x86UNIXState->getScreenNumber()));
+// TODO: Redo how the is acquired, use SDL_GetDesktopDisplayMode
+   // x86UNIXState->setDesktopSize( 
+   //    (S32) DisplayWidth( 
+   //       display,
+   //       x86UNIXState->getScreenNumber()),
+   //    (S32) DisplayHeight( 
+   //       display,
+   //       x86UNIXState->getScreenNumber())
+   //    );
+   // x86UNIXState->setDesktopBpp( 
+   //    (S32) DefaultDepth( 
+   //       display,
+   //       x86UNIXState->getScreenNumber()));
 
    // indicate that we want sys WM messages
    SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
@@ -201,40 +159,32 @@ static bool InitSDL()
 //------------------------------------------------------------------------------
 static void ProcessSYSWMEvent(const SDL_Event& event)
 {
-   XEvent& xevent = event.syswm.msg->event.xevent;
-   //Con::printf("xevent : %d", xevent.type);
-   switch (xevent.type)
-   {
-      case SelectionRequest:
-         // somebody wants our clipboard
-         NotifySelectionEvent(xevent);
-         break;
-   }
+   // Does nothing?
 }
 
 //------------------------------------------------------------------------------
 static void SetAppState()
 {
-   U8 state = SDL_GetAppState();
+   // U8 state = SDL_GetAppState();
 
-   // if we're not active but we have appactive and inputfocus, set window
-   // active and reactivate input
-   if ((!x86UNIXState->windowActive() || !Input::isActive()) &&
-      state & SDL_APPACTIVE &&
-      state & SDL_APPINPUTFOCUS)
-   {
-      x86UNIXState->setWindowActive(true);
-      Input::reactivate();
-   }
-   // if we are active, but we don't have appactive or input focus,
-   // deactivate input (if window not locked) and clear windowActive
-   else if (x86UNIXState->windowActive() && 
-      !(state & SDL_APPACTIVE && state & SDL_APPINPUTFOCUS))
-   {
-      if (x86UNIXState->windowLocked())
-         Input::deactivate();
-      x86UNIXState->setWindowActive(false);
-   }
+   // // if we're not active but we have appactive and inputfocus, set window
+   // // active and reactivate input
+   // if ((!x86UNIXState->windowActive() || !Input::isActive()) &&
+   //    state & SDL_APPACTIVE &&
+   //    state & SDL_APPINPUTFOCUS)
+   // {
+   //    x86UNIXState->setWindowActive(true);
+   //    Input::reactivate();
+   // }
+   // // if we are active, but we don't have appactive or input focus,
+   // // deactivate input (if window not locked) and clear windowActive
+   // else if (x86UNIXState->windowActive() && 
+   //    !(state & SDL_APPACTIVE && state & SDL_APPINPUTFOCUS))
+   // {
+   //    if (x86UNIXState->windowLocked())
+   //       Input::deactivate();
+   //    x86UNIXState->setWindowActive(false);
+   // }
 }
 
 //------------------------------------------------------------------------------
@@ -244,66 +194,17 @@ static S32 NumEventsPending()
    static SDL_Event events[MaxEvents];
 
    SDL_PumpEvents();
-   return SDL_PeepEvents(events, MaxEvents, SDL_PEEKEVENT, SDL_ALLEVENTS);
-}
-
-//------------------------------------------------------------------------------
-static void PrintSDLEventQueue()
-{
-   static const int MaxEvents = 255;
-   static SDL_Event events[MaxEvents];
-
-   SDL_PumpEvents();
-   S32 numEvents = SDL_PeepEvents(
-      events, MaxEvents, SDL_PEEKEVENT, SDL_ALLEVENTS);
-   if (numEvents <= 0)
-   {
-      dPrintf("SDL Event Queue is empty\n");
-      return;
-   }
-
-   dPrintf("SDL Event Queue:\n");
-   for (int i = 0; i < numEvents; ++i)
-   {
-      const char *eventType;
-      switch (events[i].type)
-      {
-         case SDL_NOEVENT: eventType = "SDL_NOEVENT"; break;
-         case SDL_ACTIVEEVENT: eventType = "SDL_ACTIVEEVENT"; break;
-         case SDL_KEYDOWN: eventType = "SDL_KEYDOWN"; break; 
-         case SDL_KEYUP: eventType = "SDL_KEYUP"; break; 
-         case SDL_MOUSEMOTION: eventType = "SDL_MOUSEMOTION"; break; 
-         case SDL_MOUSEBUTTONDOWN: eventType = "SDL_MOUSEBUTTONDOWN"; break; 
-         case SDL_MOUSEBUTTONUP: eventType = "SDL_MOUSEBUTTONUP"; break; 
-         case SDL_JOYAXISMOTION: eventType = "SDL_JOYAXISMOTION"; break; 
-         case SDL_JOYBALLMOTION: eventType = "SDL_JOYBALLMOTION"; break; 
-         case SDL_JOYHATMOTION: eventType = "SDL_JOYHATMOTION"; break; 
-         case SDL_JOYBUTTONDOWN: eventType = "SDL_JOYBUTTONDOWN"; break; 
-         case SDL_JOYBUTTONUP: eventType = "SDL_JOYBUTTONUP"; break; 
-         case SDL_QUIT: eventType = "SDL_QUIT"; break; 
-         case SDL_SYSWMEVENT: eventType = "SDL_SYSWMEVENT"; break; 
-         case SDL_VIDEORESIZE: eventType = "SDL_VIDEORESIZE"; break; 
-         case SDL_VIDEOEXPOSE: eventType = "SDL_VIDEOEXPOSE"; break; 
-       /* Events SDL_USEREVENT through SDL_MAXEVENTS-1 are for your use */
-         case SDL_USEREVENT: eventType = "SDL_USEREVENT"; break; 
-         default: eventType = "UNKNOWN!"; break;
-      }
-      dPrintf("Event %d: %s\n", i, eventType);
-   }
+   return SDL_PeepEvents(events, MaxEvents, SDL_PEEKEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT);
 }
 
 //------------------------------------------------------------------------------
 static bool ProcessMessages()
 {
    static const int MaxEvents = 255;
-   static const U32 Mask = 
-      SDL_QUITMASK | SDL_VIDEORESIZEMASK | SDL_VIDEOEXPOSEMASK |
-      SDL_ACTIVEEVENTMASK | SDL_SYSWMEVENTMASK | 
-      SDL_EVENTMASK(SDL_USEREVENT);
    static SDL_Event events[MaxEvents];
  
    SDL_PumpEvents();
-   S32 numEvents = SDL_PeepEvents(events, MaxEvents, SDL_GETEVENT, Mask);
+   S32 numEvents = SDL_PeepEvents(events, MaxEvents, SDL_GETEVENT, SDL_QUIT, SDL_SYSWMEVENT);
    if (numEvents == 0)
       return true;
    for (int i = 0; i < numEvents; ++i)
@@ -312,29 +213,39 @@ static bool ProcessMessages()
       switch (event.type)
       {
          case SDL_QUIT:
+            Con::printf("SDL_QUIT");
             return false;
             break;
-         case SDL_VIDEORESIZE:
-         case SDL_VIDEOEXPOSE:
-            Game->refreshWindow();
-            break;
-         case SDL_USEREVENT:
-            if (event.user.code == TORQUE_SETVIDEOMODE)
-            {
-               SetAppState();
-               // SDL will send a motion event to restore the mouse position
-               // on the new window.  Ignore that if the window is locked.
-               if (x86UNIXState->windowLocked())
-               {
-                  SDL_Event tempEvent;
-                  SDL_PeepEvents(&tempEvent, 1, SDL_GETEVENT, 
-                     SDL_MOUSEMOTIONMASK);
-               }
+         case SDL_WINDOWEVENT:
+
+            switch (event.window.event) {
+               case SDL_WINDOWEVENT_RESIZED:
+               case SDL_WINDOWEVENT_EXPOSED:
+                  Con::printf("window resized/exposed");
+                  Game->refreshWindow();
+                  break;
+               case SDL_WINDOWEVENT_ENTER:
+                  Con::printf("mouse enter");
+                  break;
+               case SDL_WINDOWEVENT_LEAVE:
+                  Con::printf("mouse leave");
+                  break;
+               case SDL_WINDOWEVENT_FOCUS_GAINED:
+                  Con::printf("focus gained");
+                  x86UNIXState->setWindowActive(true);
+                  Input::reactivate();
+                  break;
+               case SDL_WINDOWEVENT_FOCUS_LOST:
+                  Con::printf("focus lost");
+                  Input::deactivate();
+                  x86UNIXState->setWindowActive(false);
+                  break;
+               case SDL_WINDOWEVENT_CLOSE:
+                  Con::printf("window close");
+                  return false;
+                  break;
             }
             break;
-         case SDL_ACTIVEEVENT:
-            SetAppState();
-            break;          
          case SDL_SYSWMEVENT:
             ProcessSYSWMEvent(event);
             break;
@@ -355,6 +266,7 @@ void SendQuitEvent()
 #endif // DEDICATED
 
 //------------------------------------------------------------------------------
+// TODO: remove this completely
 static inline void Sleep(int secs, int nanoSecs)
 {
    timespec sleeptime;
@@ -379,7 +291,7 @@ void DisplayErrorAlert(const char* errMsg, bool showSDLError)
    
    if (showSDLError)
    {
-      char* sdlerror = SDL_GetError();
+      const char* sdlerror = SDL_GetError();
       if (sdlerror != NULL && dStrlen(sdlerror) > 0)
       {
          dStrcat(fullErrMsg, "  (Error: ");
@@ -398,25 +310,25 @@ static inline void AlertDisableVideo(AlertWinState& state)
 
    state.fullScreen = Video::isFullScreen();
    state.cursorHidden = (SDL_ShowCursor(SDL_QUERY) == SDL_DISABLE);
-   state.inputGrabbed = (SDL_WM_GrabInput(SDL_GRAB_QUERY) == SDL_GRAB_ON);
+//   state.inputGrabbed = (SDL_WM_GrabInput(SDL_GRAB_QUERY) == SDL_GRAB_ON);
 
-   if (state.fullScreen)
-      SDL_WM_ToggleFullScreen(SDL_GetVideoSurface());
-   if (state.cursorHidden)
-      SDL_ShowCursor(SDL_ENABLE);
-   if (state.inputGrabbed)
-      SDL_WM_GrabInput(SDL_GRAB_OFF);
+   // if (state.fullScreen)
+   //    SDL_WM_ToggleFullScreen(SDL_GetVideoSurface());
+   // if (state.cursorHidden)
+   //    SDL_ShowCursor(SDL_ENABLE);
+   // if (state.inputGrabbed)
+   //    SDL_WM_GrabInput(SDL_GRAB_OFF);
 }
 
 //------------------------------------------------------------------------------
 static inline void AlertEnableVideo(AlertWinState& state)
 {
-   if (state.fullScreen)
-      SDL_WM_ToggleFullScreen(SDL_GetVideoSurface());
-   if (state.cursorHidden)
-      SDL_ShowCursor(SDL_DISABLE);
-   if (state.inputGrabbed)
-      SDL_WM_GrabInput(SDL_GRAB_ON);
+   // if (state.fullScreen)
+   //    SDL_WM_ToggleFullScreen(SDL_GetVideoSurface());
+   // if (state.cursorHidden)
+   //    SDL_ShowCursor(SDL_DISABLE);
+   // if (state.inputGrabbed)
+   //    SDL_WM_GrabInput(SDL_GRAB_ON);
 }
 #endif // DEDICATED
 
@@ -424,18 +336,7 @@ static inline void AlertEnableVideo(AlertWinState& state)
 void Platform::AlertOK(const char *windowTitle, const char *message)
 {
 #ifndef DEDICATED
-   if (x86UNIXState->isXWindowsRunning())
-   {
-      AlertWinState state;
-      AlertDisableVideo(state);
-
-      DisplayPtrManager xdisplay;
-      XMessageBox mBox(xdisplay.getDisplayPointer());
-      mBox.alertOK(windowTitle, message);
-
-      AlertEnableVideo(state);
-   }
-   else
+   SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, windowTitle, message, NULL);
 #endif
    {
       if (Con::isActive() && StdConsole::isEnabled())
@@ -449,20 +350,6 @@ void Platform::AlertOK(const char *windowTitle, const char *message)
 bool Platform::AlertOKCancel(const char *windowTitle, const char *message)
 {
 #ifndef DEDICATED
-   if (x86UNIXState->isXWindowsRunning())
-   {
-      AlertWinState state;
-      AlertDisableVideo(state);
-
-      DisplayPtrManager xdisplay;
-      XMessageBox mBox(xdisplay.getDisplayPointer());
-      bool val = 
-         mBox.alertOKCancel(windowTitle, message) == XMessageBox::OK;
-
-      AlertEnableVideo(state);
-      return val;
-   }
-   else
 #endif
    {
       if (Con::isActive() && StdConsole::isEnabled())
@@ -477,20 +364,6 @@ bool Platform::AlertOKCancel(const char *windowTitle, const char *message)
 bool Platform::AlertRetry(const char *windowTitle, const char *message)
 {
 #ifndef DEDICATED
-   if (x86UNIXState->isXWindowsRunning())
-   {
-      AlertWinState state;
-      AlertDisableVideo(state);
-
-      DisplayPtrManager xdisplay;
-      XMessageBox mBox(xdisplay.getDisplayPointer());
-      bool val = 
-         mBox.alertRetryCancel(windowTitle, message) == XMessageBox::Retry;
-      
-      AlertEnableVideo(state);
-      return val;
-   }
-   else
 #endif
    {
       if (Con::isActive() && StdConsole::isEnabled())
@@ -505,20 +378,6 @@ bool Platform::AlertRetry(const char *windowTitle, const char *message)
 bool Platform::AlertYesNo(const char *windowTitle, const char *message)
 {
 #ifndef DEDICATED
-   if (x86UNIXState->isXWindowsRunning())
-   {
-      AlertWinState state;
-      AlertDisableVideo(state);
-
-      DisplayPtrManager xdisplay;
-      XMessageBox mBox(xdisplay.getDisplayPointer());
-      bool val = 
-         mBox.alertYesNo(windowTitle, message) == XMessageBox::OK;
-
-      AlertEnableVideo(state);
-      return val;
-   }
-   else
 #endif
    {
       if (Con::isActive() && StdConsole::isEnabled())
@@ -561,8 +420,8 @@ void Platform::disableKeyboardTranslation(void)
 void Platform::minimizeWindow()
 {
 #ifndef DEDICATED
-   if (x86UNIXState->windowCreated())
-      SDL_WM_IconifyWindow();
+   // if (x86UNIXState->windowCreated())
+   //    SDL_WM_IconifyWindow();
 #endif
 }
 
@@ -595,57 +454,11 @@ void Platform::process()
       PROFILE_START(XUX_InputProcess);
       Input::process();
       PROFILE_END();
-
-      // if we're not the foreground window, sleep for 1 ms
-      if (!x86UNIXState->windowActive())
-         Sleep(0, getBackgroundSleepTime() * 1000000);
 #endif
-   }
-   else
-   {
-      // no window
-      // if we're not in journal mode, sleep for 1 ms
-      // JMQ: since linux's minimum sleep latency seems to be 20ms, this can
-      // increase player pings by 10-20ms in the dedicated server.  So 
-      // you have to use -dsleep to enable it.  the server sleeps anyway when
-      // there are no players connected.
-      // JMQ: recent kernels (such as RH 8.0 2.4.18) reduce the latency
-      // to 2-4 ms on average.
-      if (!Game->isJournalReading() && (x86UNIXState->getDSleep() || 
-             Con::getIntVariable("Server::PlayerCount") - 
-             Con::getIntVariable("Server::BotCount") <= 0))
-      {
-         PROFILE_START(XUX_Sleep);
-         Sleep(0, getBackgroundSleepTime() * 1000000);
-         PROFILE_END();
-      }
    }
 
-#ifndef DEDICATED
-#if 0 
-// JMQ: disabled this because it may fire mistakenly in some configurations.
-// sdl's default event handling scheme should be enough.
-   // crude check to make sure that we're not loading up events.  the sdl 
-   // event queue should never have more than (say) 25 events in it at this
-   // point
-   const int MaxEvents = 25;
-   if (NumEventsPending() > MaxEvents)
-   {
-      PrintSDLEventQueue();
-      AssertFatal(false, "The SDL event queue has too many events!");
-   }
-#endif
-#endif
    PROFILE_END();
 }
-
-// extern U32 calculateCRC(void * buffer, S32 len, U32 crcVal );
-
-// #if defined(DEBUG) || defined(INTERNAL_RELEASE)
-// static U32 stubCRC = 0;
-// #else
-// static U32 stubCRC = 0xEA63F56C;
-// #endif
 
 //------------------------------------------------------------------------------
 const Point2I &Platform::getWindowSize()
@@ -818,37 +631,6 @@ void Platform::setMouseLock(bool locked)
   // Not implemented
 }
 
-//-------------------------------------------------------------------------------
-void TimeManager::process()
-{
-   U32 curTime = Platform::getRealMilliseconds();
-   TimeEvent event;
-   event.elapsedTime = curTime - lastTimeTick;
-   if(event.elapsedTime > sgTimeManagerProcessInterval)
-   {
-      lastTimeTick = curTime;
-      Game->postEvent(event);
-   }
-}
-
-//------------------------------------------------------------------------------
-ConsoleFunction( getDesktopResolution, const char*, 1, 1, 
-   "getDesktopResolution()" )
-{
-   if (!x86UNIXState->windowCreated())
-      return "0 0 0";
-
-   char buffer[256];
-   char* returnString = Con::getReturnBuffer( dStrlen( buffer ) + 1 );
-
-   dSprintf( buffer, sizeof( buffer ), "%d %d %d", 
-      x86UNIXState->getDesktopSize().x,
-      x86UNIXState->getDesktopSize().y, 
-      x86UNIXState->getDesktopBpp() );
-   dStrcpy( returnString, buffer );
-   return( returnString );
-}
-
 //------------------------------------------------------------------------------
 int main(S32 argc, const char **argv)
 {
@@ -862,13 +644,10 @@ int main(S32 argc, const char **argv)
       return returnVal;
 
    // init lastTimeTick for TimeManager::process()
-   lastTimeTick = Platform::getRealMilliseconds();
+   x86UNIXState->lastTimeTick = Platform::getRealMilliseconds();
 
    // init process control stuff 
    ProcessControlInit();
-
-   // check to see if X is running
-   DetectWindowingSystem();
 
    Game->mainInitialize(argc, argv);
   
@@ -894,18 +673,17 @@ void Platform::setWindowTitle( const char* title )
 {
 #ifndef DEDICATED
    x86UNIXState->setWindowName(title);
-   SDL_WM_SetCaption(x86UNIXState->getWindowName(), NULL);
 #endif
 }
 
 Resolution Video::getDesktopResolution()
 {
-   Resolution  Result;
-   Result.h   = x86UNIXState->getDesktopSize().x;
-   Result.w   = x86UNIXState->getDesktopSize().y;
-   Result.bpp = x86UNIXState->getDesktopBpp();
+   Resolution  result;
+   result.h   = x86UNIXState->getDesktopSize().x;
+   result.w   = x86UNIXState->getDesktopSize().y;
+   result.bpp = x86UNIXState->getDesktopBpp();
 
-  return Result;
+  return result;
 }
 
 
